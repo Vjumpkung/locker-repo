@@ -34,6 +34,8 @@ def get_all_locker():
 def reserve_locker(reservation: Reservation):
     locker_id = reservation.locker_id
     locker = cur.find_one({"locker_id": reservation.locker_id})
+    if locker_id not in range(1, 7):
+        raise HTTPException(status_code=400, detail="Locker id must be in range 1-6.")
     if locker["is_available"]:
         if len(reservation.contain) == 0:
             raise HTTPException(status_code=400, detail="You must put at least 1 belonging in the locker.")
