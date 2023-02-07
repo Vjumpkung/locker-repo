@@ -36,3 +36,6 @@ def check_bill(locker_id: int) -> int:
         return query["cost"] + ceil(total_min / 10) * 20
     else:
         return query["cost"]
+
+
+print(check_bill(4))
