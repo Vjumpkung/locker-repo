@@ -38,7 +38,7 @@ lst.append(dic)
 dic = {
         "locker_id": 6,
         "std_id": 5,
-        "contain": ["bag"],
+        "contain": ["bag", "phone"],
         "time_start": default_start_time,
         "time_end": default_stop_time,
         "cost": 10,

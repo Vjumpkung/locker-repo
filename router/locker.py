@@ -35,4 +35,7 @@ def remove_locker_reservation(std_id: int):
                        "cost": None,
                        "contain": []}}
     cur.update_one(filter_update, update)
-    return temp_bag
+    return {
+        "Item_removed": temp_bag
+    }
+
