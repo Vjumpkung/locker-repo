@@ -61,19 +61,18 @@ def reserve_locker(reservation: Reservation):
         raise HTTPException(status_code=400, detail="Sorry, Locker is not available.")
 
 
-@router.post("/remove/{std_id}")
-def remove_locker_reservation(std_id: int, client_money: int = Body(embed=True)):
-    filter_update = {"std_id": std_id, "is_available": False}
+@router.post("/remove/{locker_id}")
+def remove_locker_reservation(locker_id: int, client_money: int = Body(embed=True)):
+    filter_update = {"locker_id": locker_id, "is_available": False}
     removed_locker = cur.find_one(filter_update)
     temp_bag = removed_locker["contain"]
-    temp_locker = removed_locker["locker_id"]
     update = {"$set": {"std_id": None,
                        "is_available": True,
                        "time_start": None,
                        "time_end": None,
                        "cost": None,
                        "contain": []}}
-    temp_bill = cost.check_bill(temp_locker)
+    temp_bill = cost.check_bill(locker_id)
     if client_money < temp_bill:
         raise HTTPException(status_code=400, detail="Not enough money.")
     if client_money > temp_bill > 0:
