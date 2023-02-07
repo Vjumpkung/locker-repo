@@ -24,7 +24,7 @@ def get_all_locker():
                 dic["time_left"] = str(end_time - current_time).split(".")[0]
             else:
                 dic["time_left"] = (
-                        "late : " + str(current_time - end_time).split(".")[0]
+                    "late : " + str(current_time - end_time).split(".")[0]
                 )
         lst.append(dic)
 
@@ -39,51 +39,67 @@ def reserve_locker(reservation: Reservation):
         raise HTTPException(status_code=400, detail="Locker id must be in range 1-6.")
     if locker["is_available"]:
         if len(reservation.contain) == 0:
-            raise HTTPException(status_code=400, detail="You must put at least 1 belonging in the locker.")
+            raise HTTPException(
+                status_code=400,
+                detail="You must put at least 1 belonging in the locker.",
+            )
         if reservation.hour < 0 or reservation.minute < 0:
-            raise HTTPException(status_code=400, detail="Hour and minute can not be negative.")
+            raise HTTPException(
+                status_code=400, detail="Hour and minute can not be negative."
+            )
         if reservation.hour == 0 and reservation.minute == 0:
-            raise HTTPException(status_code=400, detail="The duration must be more than 0")
-        expected_duration = datetime.timedelta(hours=reservation.hour, minutes=reservation.minute)
+            raise HTTPException(
+                status_code=400, detail="The duration must be more than 0"
+            )
+        expected_duration = datetime.timedelta(
+            hours=reservation.hour, minutes=reservation.minute
+        )
         if expected_duration > datetime.timedelta(hours=2):
             time_diff = expected_duration - datetime.timedelta(hours=2)
-            cost = ceil(time_diff.total_seconds()/3600) * 5
+            cost = ceil(time_diff.total_seconds() / 3600) * 5
         else:
             cost = 0
-        cur.update_many({"locker_id": locker_id}, {'$set': {"std_id": reservation.std_id,
-                                                            "time_start": datetime.datetime.now(),
-                                                            "time_end": datetime.datetime.now() + expected_duration,
-                                                            "is_available": False,
-                                                            "contain": reservation.contain,
-                                                            "cost": cost
-                                                            }})
+        cur.update_many(
+            {"locker_id": locker_id},
+            {
+                "$set": {
+                    "std_id": reservation.std_id,
+                    "time_start": datetime.datetime.now(),
+                    "time_end": datetime.datetime.now() + expected_duration,
+                    "is_available": False,
+                    "contain": reservation.contain,
+                    "cost": cost,
+                }
+            },
+        )
         return f"Your reservation is done! You will have to pay {cost} baht when picking up your belonging."
     else:
         raise HTTPException(status_code=400, detail="Sorry, Locker is not available.")
 
 
 @router.post("/remove/{locker_id}")
-def remove_locker_reservation(locker_id: int, client_money: int = Body(embed=True)):
-    filter_update = {"locker_id": locker_id, "is_available": False}
+def remove_locker_reservation(
+    locker_id: int, client_money: int = Body(embed=True), std_id: int = Body(embed=True)
+):
+    filter_update = {"locker_id": locker_id, "is_available": False, "std_id": std_id}
     removed_locker = cur.find_one(filter_update)
     temp_bag = removed_locker["contain"]
-    update = {"$set": {"std_id": None,
-                       "is_available": True,
-                       "time_start": None,
-                       "time_end": None,
-                       "cost": None,
-                       "contain": []}}
+    update = {
+        "$set": {
+            "std_id": None,
+            "is_available": True,
+            "time_start": None,
+            "time_end": None,
+            "cost": None,
+            "contain": [],
+        }
+    }
     temp_bill = cost.check_bill(locker_id)
     if client_money < temp_bill:
         raise HTTPException(status_code=400, detail="Not enough money.")
-    if client_money > temp_bill > 0:
+    if client_money > temp_bill >= 0:
         cur.update_one(filter_update, update)
-        return {
-            "Item_removed": temp_bag,
-            "Change": client_money - temp_bill
-        }
+        return {"Item_removed": temp_bag, "Change": client_money - temp_bill}
     else:
         cur.update_one(filter_update, update)
-        return {
-            "Item_removed": temp_bag
-        }
+        return {"Item_removed": temp_bag}
