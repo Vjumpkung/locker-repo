@@ -1,7 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Body, HTTPException
 from config import database
 import datetime
-from fastapi import FastAPI, HTTPException, Body
+from router import cost
 from router.body_template import Reservation
 
 router = APIRouter(prefix="/locker", tags=["locker"])
@@ -23,7 +23,7 @@ def get_all_locker():
                 dic["time_left"] = str(end_time - current_time).split(".")[0]
             else:
                 dic["time_left"] = (
-                    "late : " + str(current_time - end_time).split(".")[0]
+                        "late : " + str(current_time - end_time).split(".")[0]
                 )
         lst.append(dic)
 
@@ -53,3 +53,29 @@ def reserve_locker(reservation: Reservation):
         return "Your reservation is done!"
     else:
         raise HTTPException(status_code=400, detail="Sorry, Locker is not available.")
+
+
+@router.post("/remove/{std_id}")
+def remove_locker_reservation(std_id: int, client_money: int = Body(embed=True)):
+    filter_update = {"std_id": std_id, "is_available": False}
+    removed_locker = cur.find_one(filter_update)
+    temp_bag = removed_locker["contain"]
+    temp_locker = removed_locker["locker_id"]
+    update = {"$set": {"std_id": None,
+                       "is_available": True,
+                       "time_start": None,
+                       "time_end": None,
+                       "cost": None,
+                       "contain": []}}
+    temp_bill = cost.check_bill(temp_locker)
+    if client_money > temp_bill > 0:
+        cur.update_one(filter_update, update)
+        return {
+            "Item_removed": temp_bag,
+            "Change": client_money - temp_bill
+        }
+    else:
+        cur.update_one(filter_update, update)
+        return {
+            "Item_removed": temp_bag
+        }

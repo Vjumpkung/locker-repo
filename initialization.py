@@ -27,7 +27,7 @@ for i in range(3):
 dic = {
     "locker_id": 4,
     "std_id": 123,
-    "contain": [],
+    "contain": ["battery", "monitor"],
     "time_start": default_stop_time,
     "time_end": default_start_time - datetime.timedelta(minutes=10),
     "cost": 0,
@@ -49,7 +49,7 @@ lst.append(dic)
 dic = {
     "locker_id": 6,
     "std_id": 5,
-    "contain": [],
+    "contain": ["bag", "phone"],
     "time_start": default_start_time,
     "time_end": default_stop_time,
     "cost": 0,
