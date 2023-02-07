@@ -1,19 +1,10 @@
-from pydantic import BaseModel
+from fastapi import FastAPI
+from router import locker
+
+app = FastAPI()
+app.include_router(locker.router)
 
 
-class Locker(BaseModel):
-    locker_id: int
-    is_available: bool = True
-
-
-class Customer(BaseModel):
-    std_id: int
-    contain: str
-    time_start: int
-    time_end: int
-    cost: int = 0
-
-
-@app.get('/')
+@app.get("/")
 def root():
     return {"Hello": "World"}
