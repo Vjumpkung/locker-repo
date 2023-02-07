@@ -3,6 +3,7 @@ from config import database
 import datetime
 from router import cost
 from router.body_template import Reservation
+from math import ceil
 
 router = APIRouter(prefix="/locker", tags=["locker"])
 cur = database.client["exceed06"]["Locker"]
@@ -46,7 +47,7 @@ def reserve_locker(reservation: Reservation):
         expected_duration = datetime.timedelta(hours=reservation.hour, minutes=reservation.minute)
         if expected_duration > datetime.timedelta(hours=2):
             time_diff = expected_duration - datetime.timedelta(hours=2)
-            cost = time_diff.total_seconds()//60//60 * 5
+            cost = ceil(time_diff.total_seconds()/3600) * 5
         else:
             cost = 0
         cur.update_many({"locker_id": locker_id}, {'$set': {"std_id": reservation.std_id,
@@ -56,7 +57,7 @@ def reserve_locker(reservation: Reservation):
                                                             "contain": reservation.contain,
                                                             "cost": cost
                                                             }})
-        return "Your reservation is done!"
+        return f"Your reservation is done! You will have to pay {cost} baht when picking up your belonging."
     else:
         raise HTTPException(status_code=400, detail="Sorry, Locker is not available.")
 
