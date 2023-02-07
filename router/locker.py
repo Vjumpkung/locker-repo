@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, HTTPException
 from config import database
 import datetime
 from router import cost
+from router.body_template import Reservation
 
 router = APIRouter(prefix="/locker", tags=["locker"])
 cur = database.client["exceed06"]["Locker"]
@@ -27,6 +28,31 @@ def get_all_locker():
         lst.append(dic)
 
     return lst
+
+
+@router.post("/reserve")
+def reserve_locker(reservation: Reservation):
+    locker_id = reservation.locker_id
+    locker = cur.find_one({"locker_id": reservation.locker_id})
+    if locker["is_available"]:
+        if len(reservation.contain) == 0:
+            raise HTTPException(status_code=400, detail="You must put at least 1 belonging in the locker.")
+        expected_duration = datetime.timedelta(hours=reservation.hour, minutes=reservation.minute)
+        if expected_duration > datetime.timedelta(hours=2):
+            time_diff = expected_duration - datetime.timedelta(hours=2)
+            cost = time_diff.total_seconds()//60//60 * 5
+        else:
+            cost = 0
+        cur.update_many({"locker_id": locker_id}, {'$set': {"std_id": reservation.std_id,
+                                                            "time_start": datetime.datetime.now(),
+                                                            "time_end": datetime.datetime.now() + expected_duration,
+                                                            "is_available": False,
+                                                            "contain": reservation.contain,
+                                                            "cost": cost
+                                                            }})
+        return "Your reservation is done!"
+    else:
+        raise HTTPException(status_code=400, detail="Sorry, Locker is not available.")
 
 
 @router.post("/remove/{std_id}")
