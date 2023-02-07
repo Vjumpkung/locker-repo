@@ -39,6 +39,10 @@ def reserve_locker(reservation: Reservation):
     if locker["is_available"]:
         if len(reservation.contain) == 0:
             raise HTTPException(status_code=400, detail="You must put at least 1 belonging in the locker.")
+        if reservation.hour < 0 or reservation.minute < 0:
+            raise HTTPException(status_code=400, detail="Hour and minute can not be negative.")
+        if reservation.hour == 0 and reservation.minute == 0:
+            raise HTTPException(status_code=400, detail="The duration must be more than 0")
         expected_duration = datetime.timedelta(hours=reservation.hour, minutes=reservation.minute)
         if expected_duration > datetime.timedelta(hours=2):
             time_diff = expected_duration - datetime.timedelta(hours=2)
