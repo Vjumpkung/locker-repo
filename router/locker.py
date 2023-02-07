@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 from config import database
 import datetime
 
@@ -21,3 +21,18 @@ def get_all_locker():
             dic["time_left"] = "late : " + str(current_time - end_time).split(".")[0]
         lst.append(dic)
     return lst
+
+
+@router.post("/remove/{std_id}")
+def remove_locker_reservation(std_id: int):
+    filter_update = {"std_id": std_id, "is_available": False}
+    removed_locker = cur.find_one(filter_update)
+    temp_bag = removed_locker["contain"]
+    update = {"$set": {"std_id": None,
+                       "is_available": True,
+                       "time_start": None,
+                       "time_end": None,
+                       "cost": None,
+                       "contain": []}}
+    cur.update_one(filter_update, update)
+    return temp_bag
