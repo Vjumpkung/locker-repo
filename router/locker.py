@@ -83,6 +83,8 @@ def remove_locker_reservation(
 ):
     filter_update = {"locker_id": locker_id, "is_available": False, "std_id": std_id}
     removed_locker = cur.find_one(filter_update)
+    if removed_locker == None:
+        raise HTTPException(400, detail="Invalid std_id")
     temp_bag = removed_locker["contain"]
     update = {
         "$set": {
