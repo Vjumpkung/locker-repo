@@ -70,6 +70,8 @@ def remove_locker_reservation(std_id: int, client_money: int = Body(embed=True))
                        "cost": None,
                        "contain": []}}
     temp_bill = cost.check_bill(temp_locker)
+    if client_money < temp_bill:
+        raise HTTPException(status_code=400, detail="Not enough money.")
     if client_money > temp_bill > 0:
         cur.update_one(filter_update, update)
         return {
