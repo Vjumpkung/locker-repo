@@ -35,6 +35,8 @@ def reserve_locker(reservation: Reservation):
     locker_id = reservation.locker_id
     locker = cur.find_one({"locker_id": reservation.locker_id})
     if locker["is_available"]:
+        if len(reservation.contain) == 0:
+            raise HTTPException(status_code=400, detail="You must put at least 1 belonging in the locker.")
         expected_duration = datetime.timedelta(hours=reservation.hour, minutes=reservation.minute)
         if expected_duration > datetime.timedelta(hours=2):
             time_diff = expected_duration - datetime.timedelta(hours=2)
