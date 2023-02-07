@@ -13,11 +13,16 @@ def get_all_locker():
     for i in t:
         dic = {}
         dic["locker_id"] = i["locker_id"]
-        current_time = datetime.datetime.now()
-        end_time = i["time_end"]
-        if end_time >= current_time:
-            dic["time_left"] = str(end_time - current_time).split(".")[0]
-        else:
-            dic["time_left"] = "late : " + str(current_time - end_time).split(".")[0]
+        dic["is_available"] = i["is_available"]
+        if not i["is_available"]:
+            current_time = datetime.datetime.now()
+            end_time = i["time_end"]
+            if end_time >= current_time:
+                dic["time_left"] = str(end_time - current_time).split(".")[0]
+            else:
+                dic["time_left"] = (
+                    "late : " + str(current_time - end_time).split(".")[0]
+                )
         lst.append(dic)
+
     return lst
